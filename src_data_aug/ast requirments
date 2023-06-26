@@ -1,0 +1,8 @@
+前置环境: ubuntu中node和npm的卸载与安装
+https://blog.51cto.com/shijianfeng/5258336
+
+解析ast所需：
+npm install -g sql-parser-cst
+npm install -g @solidity-parser/parser
+pip install pyExecJs
+
