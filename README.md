@@ -1,7 +1,7 @@
 # DAFCS
 DAFCS
 
-src_data_aug folder: Tugmentation codes
+src_data_aug folder: Augmentation codes
 
 src_train folder: Training codes
 
