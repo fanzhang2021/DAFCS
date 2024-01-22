@@ -23,7 +23,7 @@ class CodesDataset(Dataset):
         self.codes = codes
 
     def __len__(self):
-        return len(self.codes)  # 注意这个len本质是数据的数量
+        return len(self.codes)
 
     def __getitem__(self, i):
         return self.codes[i]
@@ -68,20 +68,18 @@ def sents_to_vecs(sents, tokenizer, model):
 def bulid_index(vecs):
     df_text = pd.DataFrame(vecs).astype('float32')
 
-    df_text = np.ascontiguousarray(np.array(df_text))  # 转换为nparray
+    df_text = np.ascontiguousarray(np.array(df_text))
 
-    dim, measure = 768, faiss.METRIC_L2  # 3s #dim为向量维数  #measure为度量方法
-    param = 'HNSW64'  # 代表需要构建什么类型的索引
+    dim, measure = 768, faiss.METRIC_L2
+    param = 'HNSW64'
     index = faiss.index_factory(dim, param, measure)
-    print(index.is_trained)  # 此时输出为True
-    index.add(df_text)  # 3.10 s #将向量加入到index中
+    print(index.is_trained)
+    index.add(df_text)
 
     return index
 
 def find_nearst_samples(query, index, topk):
-    # 检索
-    # xq = np.array(df_text)
-    D, I = index.search(query, topk)  # xq为待检索向量，返回的I为每个待检索query最相似TopK的索引list，D为其对应的距离
+    D, I = index.search(query, topk)
     print("text near examples, topk is ", topk)
     print(I)
     print(D)
@@ -95,10 +93,8 @@ def bulid_index_cos_sim(vecs):
 
 def find_nearst_cos(query, index, topk):
     faiss.normalize_L2(query)
-    D, I = index.search(query, topk)  # xq为待检索向量，返回的I为每个待检索query最相似TopK的索引list，D为其对应的距离
-    # print(D)
-
-    return I   #返回topk相似的元素下标
+    D, I = index.search(query, topk)
+    return I
 
 
 

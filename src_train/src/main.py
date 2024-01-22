@@ -39,20 +39,17 @@ def merge_old_new(old_labels, old_queries, old_codes, new_labels_1, new_queries_
     merge_queries.extend(new_queries_0)
     merge_codes.extend(new_codes_0)
 
-    print("合并后的数据量 {}".format(len(merge_labels)))
+    print("merge num {}".format(len(merge_labels)))
 
     return merge_labels, merge_queries, merge_codes
 
 
 def merge_data_3(augmented_file_path, hard_level, old_train_dataset):
-    # 读取数据
     augmented_file_path = augmented_file_path.format(hard_level)
     labels, queries, codes = read_data_dirctly(augmented_file_path)
 
-    print("第 {} hard level, 使用的数据量为 {}".format(hard_level,len(labels)))
+    print(" {} hard level, num {}".format(hard_level,len(labels)))
 
-    #合并之前的dataset
-    # 和old query和code进行合并
     old_labels, old_queries, old_codes = old_train_dataset.labels, old_train_dataset.text_lines, old_train_dataset.code_lines
     merge_labels, merge_queries, merge_codes = \
         merge_old_new(old_labels, old_queries, old_codes, labels, queries, codes, [], [], [])
@@ -62,7 +59,6 @@ def merge_data_3(augmented_file_path, hard_level, old_train_dataset):
 
 def run_train(lr, train_num):
     set_seed(42)
-    # 加载最好的model
     from my_util import BertClassfication
     # best_model = torch.load(model_save_dir)
     best_model = BertClassfication(device, PROJECT_ROOT)
@@ -127,9 +123,9 @@ def run_train(lr, train_num):
 
 if __name__ == '__main__':
     set_seed(42)
-    ############################## 全局配置 ##############################
+    ############################## config ##############################
     T_grow = 6
-    max_num_epochs = 10  # 每一个level的训练epoch
+    max_num_epochs = 10  # each level epoch
     batch_size = 64  # arg2
     lang = 'sql'
 

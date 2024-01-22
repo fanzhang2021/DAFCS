@@ -13,14 +13,13 @@ from src_saliency.Module_Util import Teacher_BertClassfication, Teacher_Dataset_
 def write_key_data_to_file(out_file_path, all_satements_code, all_parse_codes, all_parse_quries, all_parse_labels, all_key_stas, all_trival_stas):
     with open(out_file_path, "w") as writer:
         for code_sta, code_org, query, label, key_sta, trival_sta in zip(all_satements_code, all_parse_codes, all_parse_quries, all_parse_labels, all_key_stas, all_trival_stas):
-            code_sta = str(code_sta).replace("'", '"')  # 不这样处理，会使得后续分割为list出错，但是这样处理，会影响代码的"'"
+            code_sta = str(code_sta).replace("'", '"')
             writer.write(str(label) + '<CODESPLIT>'+ "URL<CODESPLIT>" + '<CODESPLIT>'.join([str(code_sta), query, code_org, key_sta, trival_sta]) + '\n')
 
-#计算一个code移除掉一个语句的logist值
-def meatures_a_code_remove_statement(satements_code, code, query, label, T_model, position_label): #complete_logit 完整的code语句，其计算的logit值
+def meatures_a_code_remove_statement(satements_code, code, query, label, T_model, position_label):
 
     # 逐个去除语句的 removed_dataLoader
-    code, ith_remove_sta_codes = remove_a_sta(satements_code, code) #codes 和其对应的 删除一个语句后的新的codes
+    code, ith_remove_sta_codes = remove_a_sta(satements_code, code)
 
     removed_dataset = Removed_Dataset_For_Lable(query, ith_remove_sta_codes, label)
     removed_dataLoader = DataLoader(removed_dataset, batch_size=16, shuffle=False)
@@ -35,11 +34,10 @@ def meatures_a_code_remove_statement(satements_code, code, query, label, T_model
         with torch.no_grad():
             with autocast():
                 outputs = T_model(list(text), list(code))
-                predict_propety = outputs[:, position_label]  # 取label为 need_label的logits
+                predict_propety = outputs[:, position_label]
 
         all_remove_sta_logits.extend(predict_propety.detach().cpu().numpy())
 
-    #直接是值最小的应该就可以了吧？不用去用complete_logit减？
     key_index = np.argmin(all_remove_sta_logits)
     trival_index = np.argmax(all_remove_sta_logits)
 
@@ -61,7 +59,6 @@ def meature_all_codes(all_satements_code, all_codes, all_queries, all_labels,T_m
     all_key_stas, all_trival_stas = [], []
     for q, c, l, stas in zip(all_queries, all_codes, all_labels, all_satements_code):
         if (int(l) == 1):
-            #label为1的
             key_sta, trival_sta = meatures_a_code_remove_statement(stas, c, q, l, T_model, position_label = 1)
         else:
             key_sta, trival_sta = meatures_a_code_remove_statement(stas, c, q, l, T_model, position_label = 0)
@@ -73,7 +70,6 @@ def meature_all_codes(all_satements_code, all_codes, all_queries, all_labels,T_m
 
 
 def find_key_statements(train_num, source_file_path, out_file_path, T_model):
-    # 寻找code片段中，最重要的语句
 
     all_s_satements_code, all_s_parse_codes, all_s_queries, all_s_labels = read_source_data(source_file_path,
                                                                                             splitnum=train_num)
@@ -81,17 +77,14 @@ def find_key_statements(train_num, source_file_path, out_file_path, T_model):
     all_key_stas, all_trival_stas = meature_all_codes(all_s_satements_code, all_s_parse_codes, all_s_queries,
                                                       all_s_labels, T_model)
 
-    # 写入文件
     write_key_data_to_file(out_file_path, all_s_satements_code, all_s_parse_codes, all_s_queries, all_s_labels,
                            all_key_stas, all_trival_stas)
 
 if __name__ == '__main__':
-    #寻找code片段中，最重要的语句
 
     train_num = 1000
     out_file_path = "../data_out/"+str(train_num)+"_key_stas.txt"
 
-    # 读取文件
     source_file_path = "../data_out/sql_source_statements_codes.txt"
     all_s_satements_code, all_s_parse_codes, all_s_queries, all_s_labels = read_source_data(source_file_path,
                                                                                             splitnum=train_num)
@@ -104,7 +97,6 @@ if __name__ == '__main__':
 
     all_key_stas, all_trival_stas = meature_all_codes(all_s_satements_code, all_s_parse_codes, all_s_queries, all_s_labels, T_model)
 
-    #写入文件
     write_key_data_to_file(out_file_path, all_s_satements_code, all_s_parse_codes, all_s_queries, all_s_labels, all_key_stas, all_trival_stas)
 
 

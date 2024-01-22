@@ -12,10 +12,10 @@ class Teacher_BertClassfication(nn.Module):
         self.model = AutoModel.from_pretrained(tokenizer_name)
         self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
 
-        self.fc1 = nn.Linear(768, 2)  # 加的感知机做分类
+        self.fc1 = nn.Linear(768, 2)
         self.device = device
 
-    def forward(self, text, code):  # 这里的输入是一个list
+    def forward(self, text, code):
         batch_tokenized = self.tokenizer(list(text), list(code), add_special_tokens=True,
                                     padding=True, max_length=128,
                                     truncation=True, return_tensors="pt")  # tokenize、add special token、pad
@@ -57,7 +57,7 @@ class Teacher_Dataset_For_Lable(Dataset):
 
         print("读取出 {} 的数量: {}".format(need_label, len(self.text_lines)))
     def __len__(self):
-        return len(self.text_lines)  # 注意这个len本质是数据的数量
+        return len(self.text_lines)
 
     def __getitem__(self, i):
         a = self.text_lines[i]
@@ -66,19 +66,17 @@ class Teacher_Dataset_For_Lable(Dataset):
         d = int(self.labels[i])
         return a, b, c, d
 
-#改动一批code语句
 def remove_sta(satements_codes, codes):
     all_remove_sta_codes = []
     for statement, code in zip(satements_codes, codes):
-        #code 对应的 statement， statement是list类型
-        code = code.replace('"', "").replace("'", "") # 为了和读取的处理对应的上
+        code = code.replace('"', "").replace("'", "")
         ith_remove_sta_code = []
         for st in statement:
-            st = st.replace('"', "").replace("'","")  # 为了和读取的处理对应的上
-            remove_sta_code = code.replace(st,"")   #会不会出现替换失败的现象？
+            st = st.replace('"', "").replace("'","")
+            remove_sta_code = code.replace(st,"")
 
             if(remove_sta_code == code):
-                print("替换失败的st: {}, ------- code: {}".format(st, code))
+                print("error st: {}, ------- code: {}".format(st, code))
 
             # print(remove_sta_code)
             ith_remove_sta_code.append(remove_sta_code)
@@ -87,17 +85,16 @@ def remove_sta(satements_codes, codes):
 
     return codes, all_remove_sta_codes
 
-#只改动一个code的语句的
 def remove_a_sta(satements_codes, code):
 
-    code = code.replace('"', "").replace("'", "") # 为了和读取的处理对应的上
+    code = code.replace('"', "").replace("'", "")
     ith_remove_sta_code = []
     for st in satements_codes:
-        st = st.replace('"', "").replace("'","")  # 为了和读取的处理对应的上
-        remove_sta_code = code.replace(st,"")   #会不会出现替换失败的现象？
+        st = st.replace('"', "").replace("'","")
+        remove_sta_code = code.replace(st,"")
 
         if(remove_sta_code == code):
-            print("替换失败的st: {}, ------- code: {}".format(st, code))
+            print("error st: {}, ------- code: {}".format(st, code))
 
         # print(remove_sta_code)
         ith_remove_sta_code.append(remove_sta_code)
@@ -108,16 +105,13 @@ def remove_a_sta(satements_codes, code):
 
 class Removed_Dataset_For_Lable(Dataset):
     def __init__(self, query, ith_remove_sta_codes, label):
-        #query和label只有一个
-        #ith_remove_sta_codes有N个
-        #需要将它们拼接起来
         self.query = query
         self.codes = ith_remove_sta_codes
         self.label = label
         print("ith_remove_sta_codes的数量: {}".format(len(self.codes)))
 
     def __len__(self):
-        return len(self.codes)  # 注意这个len本质是数据的数量
+        return len(self.codes)
 
     def __getitem__(self, i):
         a = self.query

@@ -30,17 +30,16 @@ class LineByLineTextDataset(Dataset):
 
         for line in self.lines:
             temp_line = line.split("<CODESPLIT>")
-            if (len(temp_line)) == 5:  # 确保<CODESPLIT>分开的每个部分都有值，不是Null
-                # if(str(temp_line[0]) == "1"): #1表示代码和注释对应着，0表示每对应
-                self.text_lines.append(temp_line[-2]) #注释
-                self.code_lines.append(temp_line[-1]) #代码
+            if (len(temp_line)) == 5:
+                self.text_lines.append(temp_line[-2]) #query
+                self.code_lines.append(temp_line[-1]) #code
                 self.labels.append(int(temp_line[0]))
 
 
         print("注释和代码总行数:", len(self.text_lines), len(self.code_lines))
 
     def __len__(self):
-        return len(self.text_lines)  # 注意这个len本质是数据的数量
+        return len(self.text_lines)
 
     def __getitem__(self, i):
         a = self.text_lines[i]
@@ -57,10 +56,10 @@ class BertClassfication(nn.Module):
         self.model = AutoModel.from_pretrained(tokenizer_name)
         self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
 
-        self.fc1 = nn.Linear(768, 2)  # 加的感知机做分类
+        self.fc1 = nn.Linear(768, 2)
         self.device = device
 
-    def forward(self, text, code):  # 这里的输入是一个list
+    def forward(self, text, code):
         batch_tokenized = self.tokenizer(list(text), list(code), add_special_tokens=True,
                                     padding=True, max_length=180,
                                     truncation=True, return_tensors="pt")  # tokenize、add special token、pad
@@ -82,12 +81,11 @@ class BertClassfication(nn.Module):
 
 def write_result_to_file(output_test_file, all_result, test_data_dir, test_num):
     assert os.path.isfile(test_data_dir)
-    # assert os.path.isfile(output_test_file) #是即将要新建的文件，不需要判断存不存在
     print("read test file at:", test_data_dir)
 
     with open(test_data_dir, encoding="utf-8") as f:
-        lines = [line for line in f.read().splitlines() if (len(line) > 0 and not line.isspace())] #每一行都读进来
-    assert (len(lines) % test_num == 0) #要和test_num对的上，不然怕写错了
+        lines = [line for line in f.read().splitlines() if (len(line) > 0 and not line.isspace())]
+    assert (len(lines) % test_num == 0)
 
     with open(output_test_file, "w") as writer:
         print("***** Output test results *****")
@@ -99,10 +97,10 @@ def write_result_to_file(output_test_file, all_result, test_data_dir, test_num):
 
 def main_inference(model, infer_file_path, output_infer_file, split_num):
     print("run inference")
-    # 配置
+    #config
     batch_size = 32
 
-    ########################## 数据 ############65 #############
+    ########################## Data #########################
     infer_dataset = LineByLineTextDataset(file_path=infer_file_path, split_num = split_num)
     infer_dataLoader = DataLoader(infer_dataset, batch_size, shuffle=False)
 
@@ -131,7 +129,7 @@ def main_inference(model, infer_file_path, output_infer_file, split_num):
     test_data_dir = infer_file_path
 
     test_num = 1000
-    write_result_to_file(output_infer_file, all_result, test_data_dir, test_num) #看了以下，输出和之前的代码完全一致了，inference的result算是搞定了
+    write_result_to_file(output_infer_file, all_result, test_data_dir, test_num)
 
 
 

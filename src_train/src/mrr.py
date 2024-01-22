@@ -16,13 +16,13 @@ def get_mrr(lang):
     MRR_dict = {}
     all_result = []
     for language in languages:
-        file_dir = '/home/zf/桌面/SImplfy_CDCS(train)/results/{}'.format(language)
+        file_dir = '/home/zf/desktop/SImplfy_CDCS(train)/results/{}'.format(language)
         # file_dir = "results/temp/" #只是到文件夹级别，没有到文件夹中的文件
         ranks = []
         max_array = []
         num_batch = 0
         for file in sorted(os.listdir(file_dir)):
-            print(os.path.join(file_dir, file)) #扫描该文件夹下的文件，并进行计算
+            print(os.path.join(file_dir, file))
             with open(os.path.join(file_dir, file), encoding='utf-8') as f:
                 batched_data = chunked(f.readlines(), 1000)
                 for batch_idx, batch_data in enumerate(batched_data):

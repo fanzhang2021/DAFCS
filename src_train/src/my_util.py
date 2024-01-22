@@ -18,8 +18,6 @@ class LineByLineTextDataset(Dataset):
         with open(file_path, encoding="utf-8") as f:
             self.lines = [line for line in f.read().splitlines() if (len(line) > 0 and not line.isspace())]
 
-        # 截断测试
-        # self.lines = self.lines[:100]
         if(train_num != 0):
             self.lines = self.lines[:train_num]
 
@@ -29,16 +27,15 @@ class LineByLineTextDataset(Dataset):
 
         for line in self.lines:
             temp_line = line.split("<CODESPLIT>")
-            if (len(temp_line)) == 5:  # 确保<CODESPLIT>分开的每个部分都有值，不是Null
-                # if(str(temp_line[0]) == "1"): #1表示代码和注释对应着，0表示每对应
-                self.text_lines.append(temp_line[-2]) #注释
-                self.code_lines.append(temp_line[-1]) #代码
+            if (len(temp_line)) == 5:
+                self.text_lines.append(temp_line[-2])
+                self.code_lines.append(temp_line[-1])
                 self.labels.append(int(temp_line[0]))
 
         print("注释和代码总行数:", len(self.text_lines), len(self.code_lines))
 
     def __len__(self):
-        return len(self.text_lines)  # 注意这个len本质是数据的数量
+        return len(self.text_lines)
 
     def __getitem__(self, i):
         a = self.text_lines[i]
@@ -63,7 +60,6 @@ def train_a_epoch(model, train_dataLoader, lossfuction, scaler, optimizer, sched
             outputs = model(list(text), list(code))
             loss = lossfuction(outputs, targets)
 
-        # 修改为半精度
         scaler.scale(loss).backward()
         epoch_all_loss += loss.item()
         scaler.step(optimizer)
@@ -207,7 +203,7 @@ class Teacher_Dataset_For_Lable(Dataset):
 
         print("read label {} aug data num {}".format(need_label, len(self.labels)))
     def __len__(self):
-        return len(self.text_lines)  # 注意这个len本质是数据的数量
+        return len(self.text_lines)
 
     def __getitem__(self, i):
         a = self.text_lines[i]
@@ -280,34 +276,27 @@ def read_aug_data_with_point(point_aug_data_path, min_range, delta):
                     queries.append(temp_line[1])
                     codes.append(temp_line[2])
 
-    print("read file name:{}, 符合要求大于 {} 的比例:{}/{}".format(point_aug_data_path, min_range, len(labels), len(lines)))
-    # print("read file name:{}, 符合range {}-{} 的比例:{}/{}".format(point_aug_data_path, min_range, max_range, len(labels), len(lines)))
-
     return labels, queries, codes
 
 
 def merge_origin_aug(point_out_file_path, train_file_path, train_num, pr_1, pr_0): # pr_0 delta
-    # load aug data 加载符合要求的增强数据
+    # load aug data
     labels_1, queries_1, codes_1 = read_aug_data_with_point(point_out_file_path.format(1), pr_1, pr_0)
     labels_0, queries_0, codes_0 = read_aug_data_with_point(point_out_file_path.format(0), pr_1, pr_0)
-    # 类别平衡
+
     balance_num = min(len(labels_1), len(labels_0))
     balance_labels_1, balance_queries_1, balance_codes_1 = labels_1[:balance_num], queries_1[:balance_num], codes_1[:balance_num]
     balance_labels_0, balance_queries_0, balance_codes_0 = labels_0[:balance_num], queries_0[:balance_num], codes_0[:balance_num]
 
-    print("label1 和 label0 的数量分别是 {}, {}, balance_num: {}".format(len(labels_1), len(labels_0), balance_num))
 
-
-    # 原始数据
+    # origin data
     train_dataset = LineByLineTextDataset(file_path=train_file_path, train_num=train_num)
     origin_labels, origin_queries, origin_codes = train_dataset.labels, train_dataset.text_lines, train_dataset.code_lines
 
-    # 合并
+    # merge
     l = balance_labels_1 + balance_labels_0 + origin_labels
     q = balance_queries_1 + balance_queries_0 + origin_queries
     c = balance_codes_1 + balance_codes_0 + origin_codes
-
-    print("合并后的数量 {}".format(len(l)))
 
     return l, q, c
 
@@ -317,10 +306,10 @@ class Aug_Dataset(Dataset):
         self.code_lines = codes
         self.labels = labels
 
-        print("Aug_Dataset 训练的数据量:", len(labels))
+        print("Aug_Dataset nums:", len(labels))
 
     def __len__(self):
-        return len(self.text_lines)  # 注意这个len本质是数据的数量
+        return len(self.text_lines)
 
     def __getitem__(self, i):
         a = self.text_lines[i]
